@@ -1,3 +1,5 @@
 {
-  "python.formatting.provider": "autopep8"
+  "python.formatting.provider": "autopep8",
+  "python.defaultInterpreterPath": "/Users/willsmith/.pyenv/versions/madness_venv/bin/python",
+  "python.analysis.typeCheckingMode": "off"
 }
