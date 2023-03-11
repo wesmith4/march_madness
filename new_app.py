@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import json
-from data import get_data
+from data import get_data, get_teams, get_team_by_id, get_games_by_team_id
+from time_weighting import input_time_weights
 
 # Configure the streamlit app
 st.set_page_config(
@@ -70,4 +71,32 @@ data = get_data()
 
 st.dataframe(data)
 
-st.json(data.loc[0,:].to_dict())
+st.json(data.loc[0, :].to_dict())
+
+# Plot a chart of the count of games played by day
+st.header("Games Played by Day")
+st.bar_chart(data["date"].value_counts())
+
+# Plot a line chart of the average winning score by day
+st.header("Average Winning Score by Day")
+st.line_chart(data.groupby("date")[["winning_score", "losing_score"]].mean())
+
+
+
+st.header("Teams")
+teams = get_teams()
+st.dataframe(teams)
+
+st.write(get_team_by_id(1))
+
+
+# Team Selector
+selected_team = st.selectbox(
+    "Select a team",
+    teams["team_id"],
+    format_func=get_team_by_id
+)
+
+st.dataframe(get_games_by_team_id(selected_team))
+
+input_time_weights()

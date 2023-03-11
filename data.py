@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime as dt
+import pytz
 
 # Disable flake8 warning about line length
 TEAMS_ENDPOINT = "https://masseyratings.com/scores.php\
@@ -15,6 +16,11 @@ def get_teams() -> pd.DataFrame:
     teams_df = pd.read_csv(TEAMS_ENDPOINT, header=None, index_col=None)
     teams_df.columns = ["team_id", "team_name"]
     return teams_df
+
+
+def get_team_by_id(team_id: int) -> str:
+    teams_df = get_teams()
+    return teams_df["team_name"][team_id - 1]
 
 
 @st.cache_data
@@ -42,6 +48,7 @@ def get_games() -> pd.DataFrame:
     # Convert the date column to a datetime object
     games["date"] = games["date"].apply(
         lambda x: dt.strptime(str(x), "%Y%m%d")
+        .astimezone(pytz.timezone("US/Eastern"))
     )
 
     return games
@@ -81,6 +88,15 @@ def get_data() -> pd.DataFrame:
         lambda x: x.strip() if isinstance(x, str) else x
     )
 
+    games.loc[:, "team_1_win"] = games["team_1_score"] > games["team_2_score"]
+    games.loc[:, "team_2_win"] = games["team_2_score"] > games["team_1_score"]
+    games.loc[:, "winning_score"] = games[
+        ["team_1_score", "team_2_score"]
+    ].max(axis=1)
+    games.loc[:, "losing_score"] = games[
+        ["team_1_score", "team_2_score"]
+    ].min(axis=1)
+
     return games[[
         "days_since_timestart",
         "date",
@@ -88,11 +104,22 @@ def get_data() -> pd.DataFrame:
         "team_1_name",
         "team_1_homefield",
         "team_1_score",
+        "team_1_win",
         "team_2_id",
         "team_2_name",
         "team_2_homefield",
         "team_2_score",
+        "team_2_win",
+        "winning_score",
+        "losing_score"
     ]]
+
+
+def get_games_by_team_id(team_id: int) -> pd.DataFrame:
+    df = get_data()
+    return df[
+        (df["team_1_id"] == team_id) | (df["team_2_id"] == team_id)
+    ]
 
 
 if __name__ == "__main__":

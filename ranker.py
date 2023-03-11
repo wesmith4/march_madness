@@ -60,11 +60,16 @@ class ColleyRanker(Ranker):
                 current_day,
                 date,
                 team_1_id,
+                team_1_name,
                 team_1_homefield,
                 team_1_score,
+                team_1_win,
                 team_2_id,
                 team_2_homefield,
-                team_2_score
+                team_2_score,
+                team_2_win,
+                winning_score,
+                losing_score
             ] = self.games.loc[i, :].values
 
             team_1_index = team_1_id - 1
@@ -135,11 +140,16 @@ class MasseyRanker(Ranker):
                 current_day,
                 date,
                 team_1_id,
+                team_1_name,
                 team_1_homefield,
                 team_1_score,
+                team_1_win,
                 team_2_id,
                 team_2_homefield,
-                team_2_score
+                team_2_score,
+                team_2_win,
+                winning_score,
+                losing_score
             ] = self.games.loc[i, :].values
 
             team_1_index = team_1_id - 1

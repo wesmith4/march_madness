@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-from get_data import get_games
+from data import get_games
 from colley import colley
 from massey import massey
 
@@ -37,7 +37,7 @@ if use_time_weights:
 opts = {
     "weight_home_win": home_win_weight,
     "weight_away_win": away_win_weight,
-    "weight_neutral_win": neutral_win_weight,p
+    "weight_neutral_win": neutral_win_weight,
     "use_time_weights": use_time_weights,
     "segment_weights": time_weights if use_time_weights else [1],
 }
