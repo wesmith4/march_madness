@@ -8,8 +8,8 @@ BRACKET_URL_2022 = "https://www.ncaa.com/brackets/basketball-men/d1/2022"
 
 
 @st.cache_data
-def get_bracket_games(save_to_file=False):
-    r = requests.get(BRACKET_URL_2022)
+def get_bracket_games(url=BRACKET_URL_2022, save_to_file=False):
+    r = requests.get(url)
     soup = BeautifulSoup(r.text, "html.parser")
 
     games = []
