@@ -2,7 +2,9 @@ altair==4.2.2
 astor==0.8.1
 attrs==22.2.0
 base58==2.1.1
+beautifulsoup4==4.11.2
 blinker==1.5
+bs4==0.0.1
 cachetools==5.3.0
 certifi==2022.12.7
 charset-normalizer==3.1.0
@@ -40,6 +42,7 @@ rich==13.3.2
 semver==2.13.0
 six==1.16.0
 smmap==5.0.0
+soupsieve==2.4
 stevedore==5.0.0
 streamlit==1.20.0
 toml==0.10.2

@@ -1,6 +1,4 @@
 import streamlit as st
-import pandas as pd
-import json
 from data import get_data, get_teams, get_team_by_id, get_games_by_team_id
 from time_weighting import input_time_weights
 
@@ -80,7 +78,6 @@ st.bar_chart(data["date"].value_counts())
 # Plot a line chart of the average winning score by day
 st.header("Average Winning Score by Day")
 st.line_chart(data.groupby("date")[["winning_score", "losing_score"]].mean())
-
 
 
 st.header("Teams")
