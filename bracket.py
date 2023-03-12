@@ -26,9 +26,9 @@ def get_bracket_games(url=BRACKET_URL_2022, save_to_file=False):
         "round_game_number",
         "team_1_seed",
         "team_1_name",
+        "team_1_win",
         "team_2_seed",
         "team_2_name",
-        "team_1_win",
         "team_2_win"
     ])
     ind = 0
@@ -49,9 +49,9 @@ def get_bracket_games(url=BRACKET_URL_2022, save_to_file=False):
                     game_counter,
                     int(teams[0].find("span", {"class": "seed"}).text),
                     teams[0].find("span", {"class": "name"}).text,
+                    None,
                     int(teams[1].find("span", {"class": "seed"}).text),
                     teams[1].find("span", {"class": "name"}).text,
-                    None,
                     None
                 ]
                 game_counter += 1
@@ -63,7 +63,7 @@ def get_bracket_games(url=BRACKET_URL_2022, save_to_file=False):
         lambda x: int(np.ceil(x / 2))
     )
     cols_to_keep = df.columns
-    df.sort_values(by=["round","region_name", "round_game_number"])
+    df.sort_values(by=["round", "region_name", "round_game_number"])
     df.reset_index(inplace=True, drop=True)
     copy = df.copy()
     copy.reset_index(inplace=True)
@@ -81,6 +81,41 @@ def get_bracket_games(url=BRACKET_URL_2022, save_to_file=False):
     }, inplace=True)
     df["next_game_id"] = df["next_game_id"].astype("Int64")
     # df["next_game_index"] = df["next_game_index"].astype("Int64")
+
+    final_four_games = soup.find("div", {"class": "center-final-games"})\
+        .find_all("div", {"class": "game-pod"})
+    ff = pd.DataFrame(columns=df.columns)
+    for raw_game in final_four_games:
+        teams = raw_game.find_all("div", {"class": "team"})
+        ff.loc[len(ff)] = [
+            int(raw_game["id"]),
+            "FINAL FOUR",
+            int(str(raw_game["id"][0])) - 1,
+            int(str(raw_game["id"][-1])),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            6 if raw_game["id"][0] == "6" else None,
+            1 if raw_game["id"][0] == "6" else None,
+            62 if raw_game["id"][0] == "6" else np.nan,
+            701 if raw_game["id"][0] == "6" else None,
+        ]
+    ff.sort_values(by="id", inplace=True)
+    ff.reset_index(inplace=True, drop=True)
+
+    df = pd.concat([df, ff], ignore_index=True)
+
+    df.loc[
+        (df["region_name"].isin(["WEST", "EAST"])) & (df["round"] == 4),
+        ["next_game_number", "next_game_index", "next_game_id"]
+    ] = [1, np.float64(60.0), 601]
+    df.loc[
+        (df["region_name"].isin(["MIDWEST", "SOUTH"])) & (df["round"] == 4),
+        ["next_game_number", "next_game_index", "next_game_id"]
+    ] = [2, np.float64(61.0), 602]
 
     if save_to_file:
         df.to_csv("bracket.csv", index=False)

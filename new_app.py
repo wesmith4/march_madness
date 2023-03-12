@@ -2,6 +2,8 @@ import streamlit as st
 from data import get_data, get_teams
 from bracket import get_bracket_games, BRACKET_URL_2022
 from time_weighting import input_time_weights
+import pandas as pd
+import numpy as np
 
 # Configure the streamlit app
 st.set_page_config(
@@ -88,11 +90,14 @@ bracket.loc[bracket["round"] != 1, [
     "team_2_seed",
     "team_2_name"]] = None
 
-st.dataframe(bracket)
-
 
 def decide_by_seeds(row):
-    return 1 if row["team_1_seed"] < row["team_2_seed"] else 2
+    if row["team_1_seed"] < row["team_2_seed"]:
+        return 1
+    elif row["team_2_seed"] < row["team_1_seed"]:
+        return 2
+    else:
+        return np.random.choice([1, 2])
 
 
 # Play the bracket
@@ -103,8 +108,15 @@ for i in range(len(bracket)):
 
     which_spot = 1 if row["round_game_number"] % 2 == 1 else 2
 
-    # print(type(row["next_game_index"]))
-    if not row["next_game_index"] > 0:
+    if row["next_round"] == 5:
+        which_spot = 1 if row["region_name"] in ["WEST", "MIDWEST"] else 2
+
+    bracket.loc[i, ["team_1_win", "team_2_win"]] = (
+        True if winning_team == 1 else False,
+        True if winning_team == 2 else False
+    )
+
+    if np.isnan(row["next_game_index"]):
         continue
     bracket.loc[row["next_game_index"], [
         f"team_{which_spot}_seed",
@@ -114,14 +126,10 @@ for i in range(len(bracket)):
 
 st.dataframe(bracket)
 
-input_time_weights()
-
-teams = get_teams()
-
-# Match the team names in the bracket to the team names in the data
-unique_bracket_teams = set(
-    bracket["team_1_name"].unique().tolist()
-    + bracket["team_2_name"].unique().tolist()
-)
-
-st.write(len(unique_bracket_teams))
+st.write(f"""
+The winner of the tournament is {
+    bracket.iloc[-1, :][
+        "team_1_name" if bracket.iloc[-1, :]["team_1_win"] else "team_2_name"
+    ]
+}!
+""")
