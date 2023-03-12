@@ -118,3 +118,20 @@ The winner of the tournament is **{
     ]
 }**!
 """)
+         
+
+distinct_bracket_teams = sorted(list(set(
+    bracket["team_1_name"].dropna().unique().tolist() +
+    bracket["team_2_name"].dropna().unique().tolist()
+)))
+
+teams = pd.DataFrame({"bracket_teams": distinct_bracket_teams})
+all_teams = get_teams()
+teams = teams.merge(
+    all_teams,
+    how="left",
+    left_on="bracket_teams",
+    right_on="team_name"
+)
+st.dataframe(teams)
+st.dataframe(all_teams)

@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime as dt
 import pytz
+import re
 
 # Disable flake8 warning about line length
 TEAMS_ENDPOINT = "https://masseyratings.com/scores.php\
@@ -10,17 +11,53 @@ GAMES_ENDPOINT = "https://masseyratings.com/scores.php\
 ?s=500054&sub=11590&all=1&mode=3&format=1"
 
 
+def format_team_name(team_name: str) -> str:
+    TEAM_NAME_MAPPINGS = {
+        "Miami OH": "Miami (OH)",
+        "Miami FL": "Miami (FL)",
+        "Loyola-Chicago": "Loyola Chicago",
+        "St Mary's CA": "Saint Mary's (CA)",
+        "St Peter's": "Saint Peter's",
+        "S Dakota St.": "South Dakota St.",
+        "USC": "Southern California",
+        "TX Southern": "Texas Southern",
+        "Connecticut": "UConn",
+        "CS Fullerton": "Cal State Fullerton",
+    }
+
+    team_name = team_name.strip()
+
+    team_name = team_name.replace("_", " ")
+
+    # Regex replace St at the end of a string with St.
+    team_name = re.sub(r"St$", "St.", team_name)
+
+    # Replace team name with a mapping if it exists
+    if team_name in TEAM_NAME_MAPPINGS:
+        team_name = TEAM_NAME_MAPPINGS[team_name]
+
+    return team_name
+
+
 @st.cache_data
 def get_teams() -> pd.DataFrame:
 
     teams_df = pd.read_csv(TEAMS_ENDPOINT, header=None, index_col=None)
     teams_df.columns = ["team_id", "team_name"]
+    teams_df["team_id"] = teams_df["team_id"].astype(int)
+    teams_df["raw_team_name"] = teams_df["team_name"].copy()
+    teams_df["team_name"] = teams_df["team_name"].apply(format_team_name)
     return teams_df
 
 
 def get_team_by_id(team_id: int) -> str:
     teams_df = get_teams()
     return teams_df["team_name"][team_id - 1]
+
+
+def get_team_id_by_name(team_name: str) -> int:
+    teams_df = get_teams()
+    return teams_df[teams_df["team_name"] == team_name]["team_id"].values[0]
 
 
 @st.cache_data
