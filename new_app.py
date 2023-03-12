@@ -40,24 +40,9 @@ neutral_win_weight = form_col_2.slider(
 use_time_weights = form_col_1.checkbox("Use time-based weights", value=True)
 
 if use_time_weights:
-    with form_col_1.expander("Time-based Weights", expanded=True):
-        st.write("""
-            These weights will be applied to games based on the day in which
-            they were played during the season. The season is split
-            into segments according to the number of weights
-            that you specify here.
-        """)
-        num_time_weights = st.number_input(
-            "Number of time weights", value=2, min_value=2, max_value=10)
-        time_weights = [1] * int(num_time_weights)
-        for i in range(int(num_time_weights)):
-            time_weights[i] = st.slider(
-                f"Time weight {i+1}",
-                value=1.0,
-                min_value=0.0,
-                max_value=2.0,
-                step=0.01
-            )
+    st.caption("Note: the dates shown in this table should not be edited — only the weights themselves.")
+    time_weight_df = input_time_weights(parent=form_col_1)
+    time_weights = time_weight_df["weight"].to_list()
 
 opts = {
     "weight_home_win": home_win_weight,
@@ -127,9 +112,9 @@ for i in range(len(bracket)):
 st.dataframe(bracket)
 
 st.write(f"""
-The winner of the tournament is {
+The winner of the tournament is **{
     bracket.iloc[-1, :][
         "team_1_name" if bracket.iloc[-1, :]["team_1_win"] else "team_2_name"
     ]
-}!
+}**!
 """)

@@ -1,6 +1,4 @@
 import streamlit as st
-from datetime import datetime as dt
-import pytz
 import pandas as pd
 from data import get_data
 
@@ -12,17 +10,17 @@ from data import get_data
 # they will be able to input the weight for each time weight.
 
 
-def input_time_weights():
+def input_time_weights(parent=st):
     data = get_data()
     min_date = data["date"].min()
     max_date = data["date"].max()
 
-    number_of_weights = st.number_input(
+    number_of_weights = parent.number_input(
         "Num of time weights", value=2, min_value=1, max_value=20)
 
     timespan = (max_date - min_date).days / int(number_of_weights)
 
-    df = pd.DataFrame(columns=["period", "start_date", "end_date", "weight"])
+    df = pd.DataFrame(columns=["start_date", "end_date", "weight"])
     for i in range(int(number_of_weights)):
 
         start_date = min_date + pd.Timedelta(days=i*timespan)
@@ -32,10 +30,10 @@ def input_time_weights():
         if i < int(number_of_weights) - 1:
             end_date -= pd.Timedelta(days=1)
 
-        df.loc[i] = [i, start_date, end_date, 1.0]
+        df.loc[i] = [start_date, end_date, 1.0]
 
     # Format date columns as "Mon, Mar 3"
     df["start_date"] = df["start_date"].dt.strftime("%a, %b %-d")
     df["end_date"] = df["end_date"].dt.strftime("%a, %b %-d")
 
-    st.experimental_data_editor(df)
+    return parent.experimental_data_editor(df)
