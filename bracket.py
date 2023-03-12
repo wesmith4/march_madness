@@ -1,7 +1,8 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-import json
+import pandas as pd
+import numpy as np
 
 BRACKET_URL = "https://www.ncaa.com/brackets/basketball-men/d1/2023"
 BRACKET_URL_2022 = "https://www.ncaa.com/brackets/basketball-men/d1/2022"
@@ -12,44 +13,81 @@ def get_bracket_games(url=BRACKET_URL_2022, save_to_file=False):
     r = requests.get(url)
     soup = BeautifulSoup(r.text, "html.parser")
 
-    games = []
-    # Get all div.game-pod that are children of a div.region-round.round-1
-    region_divs = soup.find_all("div", {"class": "region"})
+    regions = soup.find_all("div", {"class": "region"})
 
-    print(len(region_divs))
+    # Filter regions to include only the ones that have a round-1 div
+    regions = [region for region in regions
+               if region.find("div", {"class": "region-round round-1"})]
 
-    for region_div in region_divs:
+    df = pd.DataFrame(columns=[
+        "id",
+        "region_name",
+        "round",
+        "round_game_number",
+        "team_1_seed",
+        "team_1_name",
+        "team_2_seed",
+        "team_2_name",
+        "team_1_win",
+        "team_2_win"
+    ])
+    ind = 0
+    for region in regions:
+        region_name = region.find("h3").text
+        for i in range(1, 5):
+            game_counter = 1
+            round_div = region.find("div", {"class": f"region-round round-{i}"})
+            if not round_div:
+                continue
+            games = round_div.find_all("div", {"class": "game-pod"})
+            for game in games:
+                teams = game.find_all("div", {"class": "team"})
+                df.loc[ind] = [
+                    int(game["id"]),
+                    region_name,
+                    i,
+                    game_counter,
+                    int(teams[0].find("span", {"class": "seed"}).text),
+                    teams[0].find("span", {"class": "name"}).text,
+                    int(teams[1].find("span", {"class": "seed"}).text),
+                    teams[1].find("span", {"class": "name"}).text,
+                    None,
+                    None
+                ]
+                game_counter += 1
+                ind += 1
 
-        # Find the div.region-round.round-1 div
-        region_round_1 = region_div.find(
-            "div",
-            {"class": "region-round round-1"}
-        )
-        if not region_round_1:
-            continue
+    # Modifications to include next game info
+    df.loc[:, "next_round"] = df["round"] + 1
+    df.loc[:, "next_game_number"] = df.loc[:, "round_game_number"].apply(
+        lambda x: int(np.ceil(x / 2))
+    )
+    cols_to_keep = df.columns
+    df.sort_values(by=["round","region_name", "round_game_number"])
+    df.reset_index(inplace=True, drop=True)
+    copy = df.copy()
+    copy.reset_index(inplace=True)
+    df = df.merge(
+        copy,
+        how="left",
+        left_on=["region_name", "next_round", "next_game_number"],
+        right_on=["region_name", "round", "round_game_number"],
+        suffixes=("", "_next")
+    )
+    df = df[cols_to_keep.to_list() + ["index", "id_next"]]
+    df.rename(columns={
+        "id_next": "next_game_id",
+        "index": "next_game_index"
+    }, inplace=True)
+    df["next_game_id"] = df["next_game_id"].astype("Int64")
 
-        region_name = region_div.find("h3").text
-        region_games = region_round_1.find_all("div", {"class": "game-pod"})
-        for game in region_games:
-            raw_teams = game.find_all("div", {"class": "team"})
-            teams = []
-            for team in raw_teams:
-                name = team.find("span", {"class": "name"}).text
-                seed = team.find("span", {"class": "seed"}).text
-                teams.append({
-                    "name": name,
-                    "seed": int(seed)
-                })
-
-            games.append({
-                "region": region_name,
-                "teams": teams
-            })
+    # Remove rows where id is None
+    print(df.iloc[len(df) - 1])
+    print(len(df))
 
     if save_to_file:
-        json.dump(games, open("bracket.json", "w"), indent=4)
-
-    return games
+        df.to_csv("bracket.csv", index=False)
+    return df
 
 
 if __name__ == "__main__":

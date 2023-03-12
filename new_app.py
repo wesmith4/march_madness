@@ -1,5 +1,6 @@
 import streamlit as st
-from data import get_data, get_teams, get_team_by_id, get_games_by_team_id
+from data import get_data, get_teams
+from bracket import get_bracket_games, BRACKET_URL_2022
 from time_weighting import input_time_weights
 
 # Configure the streamlit app
@@ -69,8 +70,6 @@ data = get_data()
 
 st.dataframe(data)
 
-st.json(data.loc[0, :].to_dict())
-
 # Plot a chart of the count of games played by day
 st.header("Games Played by Day")
 st.bar_chart(data["date"].value_counts())
@@ -80,20 +79,43 @@ st.header("Average Winning Score by Day")
 st.line_chart(data.groupby("date")[["winning_score", "losing_score"]].mean())
 
 
-st.header("Teams")
-teams = get_teams()
-st.dataframe(teams)
+bracket = get_bracket_games(BRACKET_URL_2022)
 
-st.write(get_team_by_id(1))
+# Make team_1_name and team_2_name columns null if round != 1
+bracket.loc[bracket["round"] != 1, [
+    "team_1_seed",
+    "team_1_name",
+    "team_2_seed",
+    "team_2_name"]] = None
+
+st.dataframe(bracket)
+
+# Play the bracket
+
+for i in range(len(bracket)):
+    row = bracket.iloc[i]
+    winning_team = 1 if row["team_1_seed"] < row["team_2_seed"] else 2
+
+    which_spot = 1 if row["round_game_number"] % 2 == 1 else 2
+
+    if not isinstance(row["next_game_index"], int):
+        continue
+    bracket.loc[row["next_game_index"], [
+        f"team_{which_spot}_seed",
+        f"team_{which_spot}_name",
+    ]] = row[f"team_{winning_team}_seed"], row[f"team_{winning_team}_name"]
 
 
-# Team Selector
-selected_team = st.selectbox(
-    "Select a team",
-    teams["team_id"],
-    format_func=get_team_by_id
-)
-
-st.dataframe(get_games_by_team_id(selected_team))
+st.dataframe(bracket)
 
 input_time_weights()
+
+teams = get_teams()
+
+# Match the team names in the bracket to the team names in the data
+unique_bracket_teams = set(
+    bracket["team_1_name"].unique().tolist()
+    + bracket["team_2_name"].unique().tolist()
+)
+
+st.write(len(unique_bracket_teams))
