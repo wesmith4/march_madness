@@ -90,15 +90,21 @@ bracket.loc[bracket["round"] != 1, [
 
 st.dataframe(bracket)
 
-# Play the bracket
 
+def decide_by_seeds(row):
+    return 1 if row["team_1_seed"] < row["team_2_seed"] else 2
+
+
+# Play the bracket
+decision_func = decide_by_seeds
 for i in range(len(bracket)):
     row = bracket.iloc[i]
-    winning_team = 1 if row["team_1_seed"] < row["team_2_seed"] else 2
+    winning_team = decision_func(row)
 
     which_spot = 1 if row["round_game_number"] % 2 == 1 else 2
 
-    if not isinstance(row["next_game_index"], int):
+    # print(type(row["next_game_index"]))
+    if not row["next_game_index"] > 0:
         continue
     bracket.loc[row["next_game_index"], [
         f"team_{which_spot}_seed",

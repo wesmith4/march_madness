@@ -80,10 +80,7 @@ def get_bracket_games(url=BRACKET_URL_2022, save_to_file=False):
         "index": "next_game_index"
     }, inplace=True)
     df["next_game_id"] = df["next_game_id"].astype("Int64")
-
-    # Remove rows where id is None
-    print(df.iloc[len(df) - 1])
-    print(len(df))
+    # df["next_game_index"] = df["next_game_index"].astype("Int64")
 
     if save_to_file:
         df.to_csv("bracket.csv", index=False)
