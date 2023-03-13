@@ -123,7 +123,12 @@ for i in range(len(bracket)):
     ]] = row[f"team_{winning_team}_seed"], row[f"team_{winning_team}_name"]
 
 
-st.header("Bracket Game Results")
+"""
+## Predicted Game Results
+
+You can use the game outcomes in the dataframe below to fill out your bracket region-by-region, round-by-round, and then complete the Final Four.
+"""
+
 st.dataframe(bracket, height=1500)
 
 st.write(f"""
@@ -145,6 +150,10 @@ rating_results = pd.merge(
 )
 rating_results.sort_values(by="rating", ascending=False, inplace=True)
 
-st.header("Rating Results from your chosen algorithm")
+"""
+### Rating results
+
+The table below shows the actual rating values assigned to each team in the bracket by the algorithm and set of parameters you specified.
+"""
 st.dataframe(rating_results)
 
