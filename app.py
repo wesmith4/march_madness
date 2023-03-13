@@ -25,7 +25,8 @@ method = form_col_1.selectbox(
     ["Colley", "Massey"],
     index=0,
     format_func=lambda x:
-        x + " (accounts for point differential)" if x == "Massey" else x)
+        x + " (accounts for point differential)" if x == "Massey" else x
+)
 home_win_weight = form_col_2.slider(
     "Home win weight", value=1.0, min_value=0.0, max_value=2.0, step=0.01)
 away_win_weight = form_col_2.slider(
@@ -38,7 +39,7 @@ neutral_win_weight = form_col_2.slider(
     step=0.01
 )
 
-use_time_weights = form_col_1.checkbox("Use time-based weights", value=True)
+use_time_weights = form_col_1.checkbox("Use time-based weights", value=True,help="If checked, the ranking algorithm will use time-based weights. If unchecked, all games will be weighted equally.")
 
 if use_time_weights:
     form_col_1.caption("Note: the dates shown in this table should not be edited — only the weights themselves.")
