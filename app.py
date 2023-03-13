@@ -143,6 +143,7 @@ rating_results = pd.merge(
     on="team"
 )
 rating_results.sort_values(by="rating", ascending=False, inplace=True)
+
+st.header("Rating Results from your chosen algorithm")
 st.dataframe(rating_results)
 
-st.dataframe(get_bracket_games())
