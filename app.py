@@ -16,8 +16,6 @@ st.title("March Madness 2023")
 """
 This app provides a frontend for using the [Colley](https://en.wikipedia.org/wiki/Colley_Matrix) and [Massey](https://masseyratings.com/theory/massey.htm) ranking algorithms to inform selection of the outcomes of the NCAA March Madness bracket. The Colley algorithm is a simple ranking algorithm that does not account for point differential, while the Massey algorithm does. The Massey algorithm is more accurate, but it is also more computationally expensive. The Colley algorithm is much faster, but it is less accurate. The Massey algorithm is also more sensitive to the weights assigned to home, away, and neutral wins.
 
-The app also allows you to input weights for different parts of the season. For example, you can assign a weight of 1.0 to the first half of the season, and a weight of 0.5 to the second half of the season. This allows you to account for the fact that teams tend to play better in the first half of the season than in the second half of the season.
-
 #### How to use
 - Select a ranking method from the dropdown menu.
 - Adjust the weights for home, away, and neutral wins.
