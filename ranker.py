@@ -37,27 +37,21 @@ class Ranker:
         self.last_day_of_season = games.loc[
             len(games) - 1, 'days_since_timestart']
 
-    @property
-    def matrix():
-        raise NotImplementedError
-
     def process(self):
         raise NotImplementedError
 
 
 class ColleyRanker(Ranker):
 
-    @property
-    def matrix(self):
-        return 2 * np.diag(np.ones(self.num_teams))
-
     def process(self):
+
+        matrix = 2 * np.diag(np.ones(self.num_teams))
 
         b = np.ones(self.num_teams)
 
         for i in range(self.num_games):
             [
-                current_day,
+                days_since_timestart,
                 date,
                 team_1_id,
                 team_1_name,
@@ -65,6 +59,7 @@ class ColleyRanker(Ranker):
                 team_1_score,
                 team_1_win,
                 team_2_id,
+                team_2_name,
                 team_2_homefield,
                 team_2_score,
                 team_2_win,
@@ -79,7 +74,7 @@ class ColleyRanker(Ranker):
 
             weight_index = ceil(
                 num_segments * ((
-                     current_day - self.day_before_season) / (
+                     days_since_timestart - self.day_before_season) / (
                     self.last_day_of_season - self.day_before_season
                 ))) - 1
             time_weight = self.options.segment_weights[weight_index]
@@ -99,10 +94,10 @@ class ColleyRanker(Ranker):
                 else:
                     game_weight = self.options.weight_neutral_win * time_weight
 
-            self.matrix[team_1_index, team_1_index] += game_weight
-            self.matrix[team_2_index, team_2_index] += game_weight
-            self.matrix[team_1_index, team_2_index] -= game_weight
-            self.matrix[team_2_index, team_1_index] -= game_weight
+            matrix[team_1_index, team_1_index] += game_weight
+            matrix[team_2_index, team_2_index] += game_weight
+            matrix[team_1_index, team_2_index] -= game_weight
+            matrix[team_2_index, team_1_index] -= game_weight
 
             if team_1_score > team_2_score:
                 b[team_1_index] += game_weight
@@ -111,33 +106,32 @@ class ColleyRanker(Ranker):
                 b[team_1_index] -= game_weight
                 b[team_2_index] += game_weight
 
-        r = np.linalg.solve(self.matrix, b)
+        r = np.linalg.solve(matrix, b)
         i_sort = np.argsort(-r)
 
         ratings = pd.DataFrame(columns=['rank', 'team', 'rating'])
         for i in range(self.num_teams):
             ratings.loc[i, :] = [
                 i+1,
-                self.teams.loc[i_sort[i], 'team'],
+                self.teams.loc[i_sort[i], 'team_name'],
                 r[i_sort[i]]
             ]
 
-        return ratings
+        self.ratings = ratings
+        return self.ratings
 
 
 class MasseyRanker(Ranker):
 
-    @property
-    def matrix(self):
-        return np.zeros((self.num_teams, self.num_teams))
-
     def process(self):
+
+        matrix = np.zeros((self.num_teams, self.num_teams))
 
         b = np.zeros(self.num_teams)
 
         for i in range(self.num_games):
             [
-                current_day,
+                days_since_timestart,
                 date,
                 team_1_id,
                 team_1_name,
@@ -145,6 +139,7 @@ class MasseyRanker(Ranker):
                 team_1_score,
                 team_1_win,
                 team_2_id,
+                team_2_name,
                 team_2_homefield,
                 team_2_score,
                 team_2_win,
@@ -159,7 +154,7 @@ class MasseyRanker(Ranker):
 
             weight_index = ceil(
                 num_segments * ((
-                    current_day - self.day_before_season
+                    days_since_timestart - self.day_before_season
                 ) / (
                     self.last_day_of_season-self.day_before_season
                 ))) - 1
@@ -181,10 +176,10 @@ class MasseyRanker(Ranker):
                 else:
                     game_weight = self.options.weight_neutral_win * time_weight
 
-            self.matrix[team_1_index, team_1_index] += game_weight
-            self.matrix[team_2_index, team_2_index] += game_weight
-            self.matrix[team_1_index, team_2_index] -= game_weight
-            self.matrix[team_2_index, team_1_index] -= game_weight
+            matrix[team_1_index, team_1_index] += game_weight
+            matrix[team_2_index, team_2_index] += game_weight
+            matrix[team_1_index, team_2_index] -= game_weight
+            matrix[team_2_index, team_1_index] -= game_weight
 
             point_differential = game_weight * abs(team_1_score - team_2_score)
 
@@ -195,17 +190,19 @@ class MasseyRanker(Ranker):
                 b[team_1_index] -= point_differential
                 b[team_2_index] += point_differential
 
-        self.matrix[-1, :] = np.ones((1, self.num_teams))
+        matrix[-1, :] = np.ones((1, self.num_teams))
         b[-1] = 0
 
-        r = np.linalg.solve(self.matrix, b)
+        r = np.linalg.solve(matrix, b)
         i_sort = np.argsort(-r)
 
         ratings = pd.DataFrame(columns=['rank', 'team', 'rating'])
         for i in range(self.num_teams):
             ratings.loc[i, :] = [
                 i+1,
-                self.teams.loc[i_sort[i], 'team'],
+                self.teams.loc[i_sort[i], 'team_name'],
                 r[i_sort[i]]
             ]
-        return ratings
+
+        self.ratings = ratings
+        return self.ratings

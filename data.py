@@ -16,13 +16,20 @@ def format_team_name(team_name: str) -> str:
         "Miami OH": "Miami (OH)",
         "Miami FL": "Miami (FL)",
         "Loyola-Chicago": "Loyola Chicago",
-        "St Mary's CA": "Saint Mary's (CA)",
+        "St Mary's CA": "Saint Mary's",
         "St Peter's": "Saint Peter's",
         "S Dakota St.": "South Dakota St.",
-        "USC": "Southern California",
         "TX Southern": "Texas Southern",
         "Connecticut": "UConn",
         "CS Fullerton": "Cal State Fullerton",
+        "Col Charleston": "Col of Charleston",
+        "FL Atlantic": "FAU",
+        "Kennesaw": "Kennesaw St.",
+        "Kent": "Kent St.",
+        "UC Santa Barbara": "UCSB",
+        "TAM C. Christi": "Texas A&M-CC",
+        "F Dickinson": "F. Dickinson",
+        "Pittsburgh": "Pitt",
     }
 
     team_name = team_name.strip()

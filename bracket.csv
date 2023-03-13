@@ -1,0 +1,64 @@
+id,region_name,round,round_game_number,team_1_seed,team_1_name,team_1_win,team_2_seed,team_2_name,team_2_win,next_round,next_game_number,next_game_index,next_game_id
+201,South,1,1,1,Alabama,,,,,2,1,8.0,301
+202,South,1,2,8,Maryland,,9,West Virginia,,2,1,8.0,301
+203,South,1,3,5,San Diego St.,,12,Col of Charleston,,2,2,9.0,302
+204,South,1,4,4,Virginia,,13,Furman,,2,2,9.0,302
+205,South,1,5,6,Creighton,,11,NC State,,2,3,10.0,303
+206,South,1,6,3,Baylor,,14,UCSB,,2,3,10.0,303
+207,South,1,7,7,Missouri,,10,Utah St.,,2,4,11.0,304
+208,South,1,8,2,Arizona,,15,Princeton,,2,4,11.0,304
+301,South,2,1,,,,,,,3,1,12.0,401
+302,South,2,2,,,,,,,3,1,12.0,401
+303,South,2,3,,,,,,,3,2,13.0,402
+304,South,2,4,,,,,,,3,2,13.0,402
+401,South,3,1,,,,,,,4,1,14.0,501
+402,South,3,2,,,,,,,4,1,14.0,501
+501,South,4,1,,,,,,,5,1,60.0,601
+217,Midwest,1,1,1,Houston,,16,N Kentucky,,2,1,23.0,309
+218,Midwest,1,2,8,Iowa,,9,Auburn,,2,1,23.0,309
+219,Midwest,1,3,5,Miami (FL),,12,Drake,,2,2,24.0,310
+220,Midwest,1,4,4,Indiana,,13,Kent St.,,2,2,24.0,310
+221,Midwest,1,5,6,Iowa St.,,,,,2,3,25.0,311
+222,Midwest,1,6,3,Xavier,,14,Kennesaw St.,,2,3,25.0,311
+223,Midwest,1,7,7,Texas A&M,,10,Penn St.,,2,4,26.0,312
+224,Midwest,1,8,2,Texas,,15,Colgate,,2,4,26.0,312
+309,Midwest,2,1,,,,,,,3,1,27.0,405
+310,Midwest,2,2,,,,,,,3,1,27.0,405
+311,Midwest,2,3,,,,,,,3,2,28.0,406
+312,Midwest,2,4,,,,,,,3,2,28.0,406
+405,Midwest,3,1,,,,,,,4,1,29.0,503
+406,Midwest,3,2,,,,,,,4,1,29.0,503
+503,Midwest,4,1,,,,,,,5,2,61.0,602
+209,East,1,1,1,Purdue,,,,,2,1,38.0,305
+210,East,1,2,8,Memphis,,9,FAU,,2,1,38.0,305
+211,East,1,3,5,Duke,,12,Oral Roberts,,2,2,39.0,306
+212,East,1,4,4,Tennessee,,13,Louisiana,,2,2,39.0,306
+213,East,1,5,6,Kentucky,,11,Providence,,2,3,40.0,307
+214,East,1,6,3,Kansas St.,,14,Montana St.,,2,3,40.0,307
+215,East,1,7,7,Michigan St.,,10,USC,,2,4,41.0,308
+216,East,1,8,2,Marquette,,15,Vermont,,2,4,41.0,308
+305,East,2,1,,,,,,,3,1,42.0,403
+306,East,2,2,,,,,,,3,1,42.0,403
+307,East,2,3,,,,,,,3,2,43.0,404
+308,East,2,4,,,,,,,3,2,43.0,404
+403,East,3,1,,,,,,,4,1,44.0,502
+404,East,3,2,,,,,,,4,1,44.0,502
+502,East,4,1,,,,,,,5,1,60.0,601
+225,West,1,1,1,Kansas,,16,Howard,,2,1,53.0,313
+226,West,1,2,8,Arkansas,,9,Illinois,,2,1,53.0,313
+227,West,1,3,5,Saint Mary's,,12,VCU,,2,2,54.0,314
+228,West,1,4,4,UConn,,13,Iona,,2,2,54.0,314
+229,West,1,5,6,TCU,,,,,2,3,55.0,315
+230,West,1,6,3,Gonzaga,,14,Grand Canyon,,2,3,55.0,315
+231,West,1,7,7,Northwestern,,10,Boise St.,,2,4,56.0,316
+232,West,1,8,2,UCLA,,15,UNC Asheville,,2,4,56.0,316
+313,West,2,1,,,,,,,3,1,57.0,407
+314,West,2,2,,,,,,,3,1,57.0,407
+315,West,2,3,,,,,,,3,2,58.0,408
+316,West,2,4,,,,,,,3,2,58.0,408
+407,West,3,1,,,,,,,4,1,59.0,504
+408,West,3,2,,,,,,,4,1,59.0,504
+504,West,4,1,,,,,,,5,2,61.0,602
+601,FINAL FOUR,5,1,,,,,,,6,1,62.0,701
+602,FINAL FOUR,5,2,,,,,,,6,1,62.0,701
+701,FINAL FOUR,6,1,,,,,,,,,,

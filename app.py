@@ -1,7 +1,8 @@
 import streamlit as st
 from data import get_data, get_teams
-from bracket import get_bracket_games, BRACKET_URL_2022
+from bracket import get_bracket_games, get_team_seeds, BRACKET_URL
 from time_weighting import input_time_weights
+from ranker import ColleyRanker, MasseyRanker, RankingOptions
 import pandas as pd
 import numpy as np
 
@@ -44,29 +45,29 @@ if use_time_weights:
     time_weight_df = input_time_weights(parent=form_col_1)
     time_weights = time_weight_df["weight"].to_list()
 
-opts = {
-    "weight_home_win": home_win_weight,
-    "weight_away_win": away_win_weight,
-    "weight_neutral_win": neutral_win_weight,
-    "use_time_weights": use_time_weights,
-    "segment_weights": time_weights if use_time_weights else [1],
+
+opts = RankingOptions(
+    weight_home_win=home_win_weight,
+    weight_away_win=away_win_weight,
+    weight_neutral_win=neutral_win_weight,
+    use_time_weights=use_time_weights,
+    segment_weights=time_weights if use_time_weights else [1],
+)
+data = get_data()
+teams = get_teams()
+
+# Ranking Algorithms
+colley = ColleyRanker(data, teams, opts)
+colley_results = colley.process()
+massey = MasseyRanker(data, teams, opts)
+massey_results = massey.process()
+
+ALGO_MAP = {
+    "Colley": colley_results,
+    "Massey": massey_results,
 }
 
-
-data = get_data()
-
-st.dataframe(data)
-
-# Plot a chart of the count of games played by day
-st.header("Games Played by Day")
-st.bar_chart(data["date"].value_counts())
-
-# Plot a line chart of the average winning score by day
-st.header("Average Winning Score by Day")
-st.line_chart(data.groupby("date")[["winning_score", "losing_score"]].mean())
-
-
-bracket = get_bracket_games(BRACKET_URL_2022)
+bracket = get_bracket_games(BRACKET_URL)
 
 # Make team_1_name and team_2_name columns null if round != 1
 bracket.loc[bracket["round"] != 1, [
@@ -85,8 +86,20 @@ def decide_by_seeds(row):
         return np.random.choice([1, 2])
 
 
+def decide_by_algorithm(row):
+    results = ALGO_MAP[method]
+
+    team_1_name = row["team_1_name"].split("/")[0] if "/" in row["team_1_name"] else row["team_1_name"]
+    team_2_name = row["team_2_name"].split("/")[0] if "/" in row["team_2_name"] else row["team_2_name"]
+
+    team_1_rating = results.loc[results["team"] == team_1_name, "rating"].values[0]
+    team_2_rating = results.loc[results["team"] == team_2_name, "rating"].values[0]
+
+    return 1 if team_1_rating > team_2_rating else 2
+
+
 # Play the bracket
-decision_func = decide_by_seeds
+decision_func = decide_by_algorithm
 for i in range(len(bracket)):
     row = bracket.iloc[i]
     winning_team = decision_func(row)
@@ -94,7 +107,7 @@ for i in range(len(bracket)):
     which_spot = 1 if row["round_game_number"] % 2 == 1 else 2
 
     if row["next_round"] == 5:
-        which_spot = 1 if row["region_name"] in ["WEST", "MIDWEST"] else 2
+        which_spot = 1 if row["region_name"] in ["South", "Midwest"] else 2
 
     bracket.loc[i, ["team_1_win", "team_2_win"]] = (
         True if winning_team == 1 else False,
@@ -109,7 +122,8 @@ for i in range(len(bracket)):
     ]] = row[f"team_{winning_team}_seed"], row[f"team_{winning_team}_name"]
 
 
-st.dataframe(bracket)
+st.header("Bracket Game Results")
+st.dataframe(bracket, height=1500)
 
 st.write(f"""
 The winner of the tournament is **{
@@ -120,18 +134,15 @@ The winner of the tournament is **{
 """)
          
 
-distinct_bracket_teams = sorted(list(set(
-    bracket["team_1_name"].dropna().unique().tolist() +
-    bracket["team_2_name"].dropna().unique().tolist()
-)))
+seeded_teams = get_team_seeds()
 
-teams = pd.DataFrame({"bracket_teams": distinct_bracket_teams})
-all_teams = get_teams()
-teams = teams.merge(
-    all_teams,
+rating_results = pd.merge(
+    seeded_teams,
+    ALGO_MAP[method],
     how="left",
-    left_on="bracket_teams",
-    right_on="team_name"
+    on="team"
 )
-st.dataframe(teams)
-st.dataframe(all_teams)
+rating_results.sort_values(by="rating", ascending=False, inplace=True)
+st.dataframe(rating_results)
+
+st.dataframe(get_bracket_games())

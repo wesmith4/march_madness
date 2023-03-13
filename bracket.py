@@ -8,8 +8,14 @@ BRACKET_URL = "https://www.ncaa.com/brackets/basketball-men/d1/2023"
 BRACKET_URL_2022 = "https://www.ncaa.com/brackets/basketball-men/d1/2022"
 
 
+PLAY_IN_SEED_MAP = {
+    "1": "16",
+    "6": "11"
+}
+
+
 @st.cache_data
-def get_bracket_games(url=BRACKET_URL_2022, save_to_file=False):
+def get_bracket_games(url=BRACKET_URL, save_to_file=False):
     r = requests.get(url)
     soup = BeautifulSoup(r.text, "html.parser")
 
@@ -33,13 +39,13 @@ def get_bracket_games(url=BRACKET_URL_2022, save_to_file=False):
     ])
     ind = 0
     for region in regions:
-        region_name = region.find("h3").text
+        region_name = region.find("span", {"class": "subtitle"}).text
         for i in range(1, 5):
             game_counter = 1
             round_div = region.find("div", {"class": f"region-round round-{i}"})
             if not round_div:
                 continue
-            games = round_div.find_all("div", {"class": "game-pod"})
+            games = round_div.find_all("a", {"class": "game-pod"})
             for game in games:
                 teams = game.find_all("div", {"class": "team"})
                 df.loc[ind] = [
@@ -47,15 +53,21 @@ def get_bracket_games(url=BRACKET_URL_2022, save_to_file=False):
                     region_name,
                     i,
                     game_counter,
-                    int(teams[0].find("span", {"class": "seed"}).text),
-                    teams[0].find("span", {"class": "name"}).text,
+                    int(teams[0].find("span", {"class": "overline"}).text) if len(teams[0].find("span", {"class": "overline"}).text) > 0 else None,
+                    teams[0].find("p", {"class": "body"}).text if len(teams[0].find("p", {"class": "body"}).text) > 0 else None,
                     None,
-                    int(teams[1].find("span", {"class": "seed"}).text),
-                    teams[1].find("span", {"class": "name"}).text,
+                    int(teams[1].find("span", {"class": "overline"}).text) if len(teams[1].find("span", {"class": "overline"}).text) > 0 else None,
+                    teams[1].find("p", {"class": "body"}).text if len(teams[1].find("p", {"class": "body"}).text) > 0 else None,
                     None
                 ]
+
+                if len(teams[0].find("span", {"class": "overline"}).text) > 0 and not teams[0].find("span", {"class": "overline"}).text.isnumeric():
+                    df.loc[ind, "team_2_seed"] = int(PLAY_IN_SEED_MAP[str(df.loc[ind, "team_1_seed"])])
+                    df.loc[ind, "team_2_name"] = str(np.random.randint(1, 10))
+
                 game_counter += 1
                 ind += 1
+
 
     # Modifications to include next game info
     df.loc[:, "next_round"] = df["round"] + 1
@@ -82,8 +94,8 @@ def get_bracket_games(url=BRACKET_URL_2022, save_to_file=False):
     df["next_game_id"] = df["next_game_id"].astype("Int64")
     # df["next_game_index"] = df["next_game_index"].astype("Int64")
 
-    final_four_games = soup.find("div", {"class": "center-final-games"})\
-        .find_all("div", {"class": "game-pod"})
+    final_four_games = soup.find("div", {"class": "final-four"})\
+        .find_all("a", {"class": "game-pod"})
     ff = pd.DataFrame(columns=df.columns)
     for raw_game in final_four_games:
         teams = raw_game.find_all("div", {"class": "team"})
@@ -109,16 +121,65 @@ def get_bracket_games(url=BRACKET_URL_2022, save_to_file=False):
     df = pd.concat([df, ff], ignore_index=True)
 
     df.loc[
-        (df["region_name"].isin(["WEST", "EAST"])) & (df["round"] == 4),
+        (df["region_name"].isin(["South", "East"])) & (df["round"] == 4),
         ["next_game_number", "next_game_index", "next_game_id"]
     ] = [1, np.float64(60.0), 601]
     df.loc[
-        (df["region_name"].isin(["MIDWEST", "SOUTH"])) & (df["round"] == 4),
+        (df["region_name"].isin(["Midwest", "West"])) & (df["round"] == 4),
         ["next_game_number", "next_game_index", "next_game_id"]
     ] = [2, np.float64(61.0), 602]
 
+
+    # First Four
+    REGION_INDICATOR_MAP = {
+        "S": "South",
+        "E": "East",
+        "MW": "Midwest",
+        "W": "West"
+    }
+    first_four = soup.find("div", {"class": "first-four"})
+    first_four_pods = first_four.find_all("div", {"class": "game-pod"})
+    for pod in first_four_pods:
+        region = REGION_INDICATOR_MAP[pod.find("span", {"class": "subtitle"}).text]
+        seed = int(pod.find("span", {"class": "overline"}).text)
+        teams = "/".join([
+            team.find("p", {"class": "body"}).text for team in pod.find_all("div", {"class": "team"})
+        ])
+        df.loc[
+            (df["region_name"] == region) &
+            (df["round"] == 1) &
+            (df["team_2_seed"].isnull()),
+            ["team_2_seed", "team_2_name"]
+        ] = [seed, teams]
+
     if save_to_file:
         df.to_csv("bracket.csv", index=False)
+    return df
+
+
+@st.cache_data
+def get_team_seeds():
+    bracket_games = get_bracket_games()
+    bracket_games = bracket_games[bracket_games["round"] == 1]
+    df = pd.concat([
+        pd.DataFrame(bracket_games[["team_1_seed", "team_1_name"]].values, columns=["seed", "team"]),
+        pd.DataFrame(bracket_games[["team_2_seed", "team_2_name"]].values, columns=["seed", "team"])
+    ])
+
+    # Get rows where team contains "/"
+    split_teams = df[df["team"].str.contains("/")].copy()
+
+    for i, row in split_teams.iterrows():
+        team_1, team_2 = row["team"].split("/")
+        seed = row["seed"]
+        df.loc[len(df)] = [seed, team_1]
+        df.loc[len(df)] = [seed, team_2]
+
+    df = df[~df["team"].str.contains("/")]
+    df.drop_duplicates(inplace=True)
+    df.sort_values(by=["seed", "team"], inplace=True)
+    df.reset_index(inplace=True, drop=True)
+    df["seed"] = df["seed"].astype("Int64")
     return df
 
 
