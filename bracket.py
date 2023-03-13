@@ -101,7 +101,7 @@ def get_bracket_games(url=BRACKET_URL, save_to_file=False):
         teams = raw_game.find_all("div", {"class": "team"})
         ff.loc[len(ff)] = [
             int(raw_game["id"]),
-            "FINAL FOUR",
+            "FINAL FOUR" if raw_game["id"][0] == "6" else "CHAMPIONSHIP",
             int(str(raw_game["id"][0])) - 1,
             int(str(raw_game["id"][-1])),
             None,
